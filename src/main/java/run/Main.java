@@ -29,6 +29,8 @@ public class Main {
         ParamsForCache paramsForCache = new ParamsForCache(method);
         Cache.СacheType сacheType = paramsForCache.cacheType;
 
+        SBHashMapService.init();
+
         if (сacheType == Cache.СacheType.SQLITE) {
             //Старт
             DataSourceHelper.getINSTANCE().Connect();
@@ -38,7 +40,7 @@ public class Main {
         }
 
         //Загрузка кэша из бд
-        SBHashMapService.loadCash(сacheType);
+        SBHashMapService.loadCache(сacheType);
 
         service = ServiceImpl.createNewProxy();
 
@@ -81,9 +83,8 @@ public class Main {
             //Стоп
             DataSourceHelper.getINSTANCE().CloseDB();
         }
-        else if (сacheType == Cache.СacheType.FILE){
-            SBHashMapService.saveCash(сacheType);
-        }
+
+        SBHashMapService.saveCache(сacheType);
 
     }
 
