@@ -1,6 +1,8 @@
 package jdbc.model;
 
-public class Portion {
+import java.io.Serializable;
+
+public class Portion implements Serializable {
 
     private Integer id;
     private String key;
@@ -35,5 +37,14 @@ public class Portion {
 
     public void setValue(String value) {
         this.value=value;
+    }
+
+    @Override
+    public String toString() {
+        return "Portion{" +
+                "id=" + id +
+                ", key='" + key + '\'' +
+                ", value='" + value + '\'' +
+                '}';
     }
 }
