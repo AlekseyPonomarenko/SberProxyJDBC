@@ -33,10 +33,11 @@ public class Main {
 
         PortionDao portionDao = new PortionDaoImpl();
 
-        Portion model = portionDao.createPortion("key1", "val1");
-        Portion model2 = portionDao.createPortion("key2", "val2");
+        //Portion model = portionDao.createPortion("key1", "val1");
+        //Portion model2 = portionDao.createPortion("key2", "val2");
 
-
+        Portion model3  =portionDao.findById(8);
+        System.out.println(model3.getValue());
 
 
 

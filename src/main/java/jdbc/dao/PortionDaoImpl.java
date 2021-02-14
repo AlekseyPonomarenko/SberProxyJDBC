@@ -15,24 +15,27 @@ public class PortionDaoImpl implements PortionDao {
 
         //сразу пишем в базу
         try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
-                .prepareStatement("INSERT INTO 'portion' ('key', 'value') VALUES (?, ?);")) {
-            statement.setString(1, portion.getKey());
-            statement.setString(2, portion.getValue());
-            statement.executeUpdate();
+                .prepareStatement("select * from portion where id =?")) {
+            statement.setInt(1, id);
+            statement.execute();
 
-            //Получаем созданный id
-            ResultSet generatedKeys = statement.getGeneratedKeys();
-            generatedKeys.next();
-            portion.setId(generatedKeys.getInt(1));
+            ResultSet resultSet = statement.getResultSet();
+            resultSet.next();
+            return resultSetForPortion(resultSet);
+
 
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        System.out.println(portion.getId());
-        return portion;
 
 
         return null;
+    }
+
+    private Portion resultSetForPortion(ResultSet resultSet) throws SQLException {
+        Portion portion= Portion.create(resultSet.getString("key"), resultSet.getString("value"));
+        portion.setId(resultSet.getInt("id"));
+        return portion;
     }
 
     @Override
