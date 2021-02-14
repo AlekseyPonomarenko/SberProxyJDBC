@@ -5,9 +5,11 @@ import jdbc.service.PortionService;
 import primaryTasks.Service;
 import primaryTasks.ServiceImpl;
 import superCacheProxy.Cache;
+import superCacheProxy.ParamsForCache;
 import superCacheProxy.SBHashMapService;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,7 +23,11 @@ public class Main {
 
         boolean testMulti = true;//Тестирование многопоточности
 
-        Cache.СacheType сacheType = Cache.СacheType.SQLITE;
+        //Начальные параметры
+
+        Method method = ServiceImpl.class.getMethod("doHardWork",Object.class, Object.class);
+        ParamsForCache paramsForCache = new ParamsForCache(method);
+        Cache.СacheType сacheType = paramsForCache.cacheType;
 
         if (сacheType == Cache.СacheType.SQLITE) {
             //Старт
@@ -31,10 +37,10 @@ public class Main {
             PortionService.createSqlTables();
         }
 
-        service = ServiceImpl.createNewProxy();
-
         //Загрузка кэша из бд
         SBHashMapService.loadCash(сacheType);
+
+        service = ServiceImpl.createNewProxy();
 
         if (testMulti) {
 
@@ -55,6 +61,9 @@ public class Main {
             }
 
         } else {
+
+            //без потока, для удобства отладки
+
             for (int i=0; i < 10; i++) {
                 service.doHardWork("key" + i, "value" + i);
             }
@@ -64,6 +73,9 @@ public class Main {
             }
         }
 
+
+
+        //всё закрываем
 
         if (сacheType == Cache.СacheType.SQLITE){
             //Стоп
