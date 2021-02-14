@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SBHashMapService {
 
     static private Map <Object, Object> resultByArg = new ConcurrentHashMap <>();
+    static private Map <Object, String> resultByFiles = new ConcurrentHashMap <>();
     static private Map <Object, Integer> resultBySql = new ConcurrentHashMap <>();
     static private PortionDao portionDao = new PortionDaoImpl();
 
@@ -38,15 +39,12 @@ public class SBHashMapService {
 
         if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
 
-
             Portion model = portionDao.createPortion(key, value);
             return resultBySql.put(key, model.getId());
 
         }
+        else if (paramsForCache.cacheType == Cache.СacheType.FILE) {
 
-
-
-        if (paramsForCache.cacheType == Cache.СacheType.FILE) {
             newTempCatalog();
 
             String newFileName = paramsForCache.prefix + "_" + UUID.randomUUID().toString() + ".sbdat";
@@ -58,7 +56,7 @@ public class SBHashMapService {
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-            value = newFileName;
+            return resultByFiles.put(key, newFileName);
         }
 
         return resultByArg.put(key, value);
@@ -71,26 +69,24 @@ public class SBHashMapService {
         ParamsForCache paramsForCache=new ParamsForCache(invokeMethod);
         if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
 
-            Portion model=portionDao.findById(resultBySql.get(key));
+            Portion model = portionDao.findById(resultBySql.get(key));
             result = model.getValue();
 
-        } else {
-            result=resultByArg.get(key);
-            if (paramsForCache.cacheType == Cache.СacheType.FILE) {
+        } else if (paramsForCache.cacheType == Cache.СacheType.FILE) {
 
-                String fullFileName=catalog + "\\" + result;
-                try (ObjectInputStream ois=new ObjectInputStream(new FileInputStream(fullFileName))) {
-                    result=(Object) ois.readObject();
-                } catch (Exception ex) {
-                    System.out.println(ex.getMessage());
-                }
-                return result;
+            result = resultByFiles.get(key);
+            String fullFileName=catalog + "\\" + result;
+
+            try (ObjectInputStream ois=new ObjectInputStream(new FileInputStream(fullFileName))) {
+                result=(Object) ois.readObject();
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
             }
+        } else {
+            result = resultByArg.get(key);
         }
-
         System.out.println("Получили из кэша " + result);
         return result;
-
     }
 
     static public boolean containsKey(Object key, Method invokeMethod) {
@@ -99,12 +95,13 @@ public class SBHashMapService {
 
         if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
             return resultBySql.containsKey(key);
+        } else if (paramsForCache.cacheType == Cache.СacheType.FILE) {
+            return resultByFiles.containsKey(key);
         }
-
         return resultByArg.containsKey(key);
     }
 
-    static public boolean saveLastVersion() {
+    static private boolean saveLastVersionFile() {
 
         String fullFileName = catalog + "\\" + nameLastversionMap;
 
@@ -117,7 +114,7 @@ public class SBHashMapService {
         return false;
     }
 
-    static public boolean loadLastVersion() {
+    static public boolean loadLastVersionFile() {
 
         String fullFileName = catalog + "\\" + nameLastversionMap;
         File file = new File(fullFileName);
@@ -137,11 +134,19 @@ public class SBHashMapService {
     }
 
 
-    static public void loadCash(Cache.СacheType cacheType) throws SQLException {
+    static public void loadCash(Cache.СacheType cacheType) throws SQLException, IOException, ClassNotFoundException {
         if (cacheType == Cache.СacheType.SQLITE) {
             portionDao.loadCash(resultBySql);
+        } else if (cacheType == Cache.СacheType.FILE) {
+            loadLastVersionFile();
         }
+    }
 
+    static public void saveCash(Cache.СacheType cacheType) throws SQLException, IOException, ClassNotFoundException {
+
+        if (cacheType == Cache.СacheType.FILE) {
+            saveLastVersionFile();
         }
+    }
 
 }

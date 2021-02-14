@@ -37,7 +37,7 @@ public class PortionDaoImpl implements PortionDao {
     }
 
     @Override
-    public void loadCash(Map <Object, Integer> resultBySql) throws SQLException {
+    public void loadCash(Map <Object, Integer> resultBySql) throws SQLException, IOException, ClassNotFoundException {
 
         try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
                 .prepareStatement("select id, key from portion")) {
@@ -46,7 +46,7 @@ public class PortionDaoImpl implements PortionDao {
 
             ResultSet resultSet=statement.getResultSet();
             while (resultSet.next()) {
-                resultBySql.put(resultSet.getString("key"), resultSet.getInt("id"));
+                resultBySql.put(fromStringBase64(resultSet.getString("key")), resultSet.getInt("id"));
             }
 
         } catch (SQLException throwables) {
