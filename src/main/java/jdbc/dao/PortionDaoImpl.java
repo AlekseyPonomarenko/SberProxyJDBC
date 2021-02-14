@@ -3,17 +3,17 @@ package jdbc.dao;
 import jdbc.connection.DataSourceHelper;
 import jdbc.model.Portion;
 
+import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Base64;
 
 public class PortionDaoImpl implements PortionDao {
 
     @Override
     public Portion findById(int id) {
 
-        //сразу пишем в базу
         try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
                 .prepareStatement("select * from portion where id =?")) {
             statement.setInt(1, id);
@@ -23,19 +23,26 @@ public class PortionDaoImpl implements PortionDao {
             resultSet.next();
             return resultSetForPortion(resultSet);
 
-
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
 
         return null;
     }
 
-    private Portion resultSetForPortion(ResultSet resultSet) throws SQLException {
-        Portion portion= Portion.create(resultSet.getString("key"), resultSet.getString("value"));
+    private Portion resultSetForPortion(ResultSet resultSet) throws SQLException, IOException, ClassNotFoundException {
+
+        Portion portion= Portion.create(
+                fromStringBase64(resultSet.getString("key")),
+                fromStringBase64(resultSet.getString("value"))
+        );
         portion.setId(resultSet.getInt("id"));
         return portion;
+
     }
 
     @Override
@@ -46,8 +53,7 @@ public class PortionDaoImpl implements PortionDao {
         //сразу пишем в базу
         try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
                 .prepareStatement("INSERT INTO 'portion' ('key', 'value') VALUES (?, ?);")) {
-            statement.setString(1, portion.getKey());
-            statement.setString(2, portion.getValue());
+            setStatementFromPortion(statement, portion);
             statement.executeUpdate();
 
             //Получаем созданный id
@@ -55,12 +61,35 @@ public class PortionDaoImpl implements PortionDao {
             generatedKeys.next();
             portion.setId(generatedKeys.getInt(1));
 
-        } catch (SQLException throwables) {
+        } catch (SQLException | IOException throwables) {
             throwables.printStackTrace();
         }
         System.out.println(portion.getId());
         return portion;
     }
+    private void setStatementFromPortion(PreparedStatement statement, Portion portion) throws SQLException, IOException {
+        statement.setString(1, toStringBase64((Serializable) portion.getKey()));
+        statement.setString(2, toStringBase64((Serializable) portion.getValue()));
+    }
 
+    /** Read the object from Base64 string. */
+    private static Object fromStringBase64(String s ) throws IOException,
+            ClassNotFoundException {
+        byte [] data = Base64.getDecoder().decode( s );
+        ObjectInputStream ois = new ObjectInputStream(
+                new ByteArrayInputStream(  data ) );
+        Object o  = ois.readObject();
+        ois.close();
+        return o;
+    }
+
+    /** Write the object to a Base64 string. */
+    private static String toStringBase64(Serializable o ) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream( baos );
+        oos.writeObject( o );
+        oos.close();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
 
 }

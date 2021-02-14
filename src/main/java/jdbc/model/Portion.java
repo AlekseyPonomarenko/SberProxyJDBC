@@ -5,10 +5,10 @@ import java.io.Serializable;
 public class Portion implements Serializable {
 
     private Integer id;
-    private String key;
-    private String value;
+    private Object key;
+    private Object value;
 
-    public static Portion create(String key, String value){
+    public static Portion create(Object key, Object value){
         Portion p = new Portion();
         p.setKey(key);
         p.setValue(value);
@@ -23,19 +23,19 @@ public class Portion implements Serializable {
         this.id=id;
     }
 
-    public String getKey() {
+    public Object getKey() {
         return key;
     }
 
-    public void setKey(String key) {
+    public void setKey(Object key) {
         this.key=key;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(Object value) {
         this.value=value;
     }
 
