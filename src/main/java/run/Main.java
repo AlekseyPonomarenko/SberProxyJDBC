@@ -1,53 +1,81 @@
 package run;
 
 import jdbc.connection.DataSourceHelper;
-import jdbc.dao.PortionDao;
-import jdbc.dao.PortionDaoImpl;
-import jdbc.model.Portion;
 import jdbc.service.PortionService;
+import primaryTasks.Service;
+import primaryTasks.ServiceImpl;
+import superCacheProxy.Cache;
+import superCacheProxy.SBHashMapService;
 
-import java.io.*;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Base64;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
-    public static void main(String[] args) {
 
-        //Старт
-        try {
+    private static Service service;
+
+    public static void main(String[] args) throws SQLException, ClassNotFoundException, NoSuchMethodException, IOException {
+
+        boolean testMulti = true;//Тестирование многопоточности
+
+        Cache.СacheType сacheType = Cache.СacheType.SQLITE;
+
+        if (сacheType == Cache.СacheType.SQLITE) {
+            //Старт
             DataSourceHelper.getINSTANCE().Connect();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
-            return;
-        }
 
-        //Первичная инициализация таблиц
-        try {
+            //Первичная инициализация таблиц
             PortionService.createSqlTables();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            return;
         }
 
-        PortionDao portionDao = new PortionDaoImpl();
+        service = ServiceImpl.createNewProxy();
 
-        Portion model = portionDao.createPortion("key1", "val1");
-        Portion model2 = portionDao.createPortion("key2", "val2");
+        //Загрузка кэша из бд
+        SBHashMapService.loadCash(сacheType);
 
-        Portion model3 = portionDao.findById(5);
-        System.out.println(model3.getValue());
+        if (testMulti) {
 
-        //Стоп
-        try {
+            //генератор потоков
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+            for (int i=0; i<10; i++ ) {
+                for (int j = 0; j < 5; j++) {
+                    MyRunnable task  = new MyRunnable("t" + i, i);
+                    executor.execute(task);
+                }
+            }
+
+            executor.shutdown();
+            try {
+                executor.awaitTermination(2, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            for (int i=0; i < 10; i++) {
+                service.doHardWork("key" + i, "value" + i);
+            }
+
+            for (int i=0; i < 10; i++) {
+                service.doHardWork("key" + i, "value" + i);
+            }
+        }
+
+
+        if (сacheType == Cache.СacheType.SQLITE){
+            //Стоп
             DataSourceHelper.getINSTANCE().CloseDB();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            throwables.printStackTrace();
         }
-
+        else if (сacheType == Cache.СacheType.FILE){
+            SBHashMapService.saveCash(сacheType);
+        }
 
     }
 
-
-
-
+    public static Service getService() {
+        return service;
+    }
 }

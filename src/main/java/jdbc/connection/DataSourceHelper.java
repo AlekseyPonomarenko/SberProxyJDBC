@@ -20,7 +20,7 @@ public class DataSourceHelper {
     public void  Connect() throws ClassNotFoundException, SQLException {
         connection = null;
         Class.forName("org.sqlite.JDBC");
-        connection = DriverManager.getConnection("jdbc:sqlite:cache1.s3db");
+        connection = DriverManager.getConnection("jdbc:sqlite:cache.s3db");
         System.out.println("База Подключена!");
     }
 
@@ -30,7 +30,6 @@ public class DataSourceHelper {
     public void CloseDB() throws ClassNotFoundException, SQLException
     {
         connection.close();
-
         System.out.println("Соединения закрыты");
     }
 

@@ -1,6 +1,6 @@
 package primaryTasks;
 
-import superCache.Cache;
+import superCacheProxy.Cache;
 
 public interface Service {
     @Cache(cacheType = Cache.СacheType.SQLITE, fileNamePrefix = "data")

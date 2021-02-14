@@ -1,9 +1,8 @@
-package superCache;
+package superCacheProxy;
 
 import jdbc.dao.PortionDao;
 import jdbc.dao.PortionDaoImpl;
 import jdbc.model.Portion;
-import primaryTasks.ServiceImpl;
 
 import java.io.*;
 import java.lang.reflect.Method;
@@ -106,7 +105,7 @@ public class SBHashMapService {
         String fullFileName = catalog + "\\" + nameLastversionMap;
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fullFileName))) {
-            oos.writeObject(resultByArg);
+            oos.writeObject(resultByFiles);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -121,7 +120,7 @@ public class SBHashMapService {
 
         if (file.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fullFileName))) {
-                resultByArg = (Map<Object, Object>) ois.readObject();
+                resultByFiles = (Map<Object, String>) ois.readObject();
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 return false;
