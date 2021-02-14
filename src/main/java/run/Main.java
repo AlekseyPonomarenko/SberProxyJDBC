@@ -1,6 +1,8 @@
 package run;
 
 import jdbc.connection.DataSourceHelper;
+import jdbc.dao.PortionDao;
+import jdbc.dao.PortionDaoImpl;
 import jdbc.model.Portion;
 import jdbc.service.PortionService;
 
@@ -29,6 +31,10 @@ public class Main {
 
 
 
+        PortionDao portionDao = new PortionDaoImpl();
+
+        Portion model = portionDao.createPortion("key1", "val1");
+        Portion model2 = portionDao.createPortion("key2", "val2");
 
 
 

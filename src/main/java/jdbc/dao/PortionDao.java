@@ -5,6 +5,7 @@ import jdbc.model.Portion;
 public interface PortionDao {
 
     public Portion findById(int id);
-    public int save(Portion portion);
+    public Portion createPortion(String key, String value);
+
 
 }
