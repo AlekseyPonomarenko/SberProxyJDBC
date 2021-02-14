@@ -28,13 +28,13 @@ public class CachedInvocationHandler implements InvocationHandler {
 
         if(method.isAnnotationPresent(Cache.class)) {
 
-            if (SBHashMapService.containsKey(key(method, args))) {
+            if (SBHashMapService.containsKey(key(method, args), method)) {
                 result = SBHashMapService.get(key(method, args), method);
             }
             else {
                 locker.lock();
                 try {
-                    if (SBHashMapService.containsKey(key(method, args))) {
+                    if (SBHashMapService.containsKey(key(method, args), method)) {
                         result = SBHashMapService.get(key(method, args), method);
                     } else {
                         result = method.invoke(delegate, args);

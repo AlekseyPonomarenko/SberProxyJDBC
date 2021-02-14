@@ -1,5 +1,10 @@
 package superCache;
 
+import jdbc.dao.PortionDao;
+import jdbc.dao.PortionDaoImpl;
+import jdbc.model.Portion;
+import primaryTasks.ServiceImpl;
+
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -8,7 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SBHashMapService {
+
     static private Map <Object, Object> resultByArg = new ConcurrentHashMap <>();
+    static private Map <Object, Integer> resultBySql = new ConcurrentHashMap <>();
+
     static final private String catalog = "D:\\Temp";
     static final private String nameLastversionMap = "lastVersion.sbdat";
 
@@ -23,8 +31,18 @@ public class SBHashMapService {
 
     static public Object put(Object key, Object value, Method invokeMethod) {
 
-        System.out.println("Добавили SBHashMap:" + value);
+        System.out.println("Добавили в кэш:" + value);
         ParamsForCache paramsForCache = new ParamsForCache(invokeMethod);
+
+        if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
+
+            PortionDao portionDao = new PortionDaoImpl();
+            Portion model = portionDao.createPortion(key, value);
+            return resultBySql.put(key, model.getId());
+
+        }
+
+
 
         if (paramsForCache.cacheType == Cache.СacheType.FILE) {
             newTempCatalog();
@@ -48,27 +66,39 @@ public class SBHashMapService {
 
         Object result;
 
-        result = resultByArg.get(key);
-        ParamsForCache paramsForCache = new ParamsForCache(invokeMethod);
+        ParamsForCache paramsForCache=new ParamsForCache(invokeMethod);
+        if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
 
-        if (paramsForCache.cacheType == Cache.СacheType.FILE) {
+            PortionDao portionDao=new PortionDaoImpl();
+            Portion model=portionDao.findById(resultBySql.get(key));
+            result = model.getValue();
 
-            String fullFileName = catalog + "\\" + result;
+        } else {
+            result=resultByArg.get(key);
+            if (paramsForCache.cacheType == Cache.СacheType.FILE) {
 
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fullFileName))) {
-                result = (Object) ois.readObject();
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                String fullFileName=catalog + "\\" + result;
+                try (ObjectInputStream ois=new ObjectInputStream(new FileInputStream(fullFileName))) {
+                    result=(Object) ois.readObject();
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                }
+                return result;
             }
-            return result;
         }
 
-        System.out.println("Получили из SBHashMap " + result);
+        System.out.println("Получили из кэша " + result);
         return result;
 
     }
 
-    static public boolean containsKey(Object key) {
+    static public boolean containsKey(Object key, Method invokeMethod) {
+
+        ParamsForCache paramsForCache = new ParamsForCache(invokeMethod);
+
+        if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
+            return resultBySql.containsKey(key);
+        }
 
         return resultByArg.containsKey(key);
     }
@@ -104,4 +134,13 @@ public class SBHashMapService {
 
         return false;
     }
+
+
+    static public void loadCash(Cache.СacheType cacheType) {
+        if (cacheType == Cache.СacheType.SQLITE){
+
+        }
+
+        }
+
 }

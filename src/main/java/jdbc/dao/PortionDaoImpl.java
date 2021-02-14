@@ -7,7 +7,9 @@ import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Map;
 
 public class PortionDaoImpl implements PortionDao {
 
@@ -34,6 +36,27 @@ public class PortionDaoImpl implements PortionDao {
         return null;
     }
 
+    public void loadCash(Map <Object, Integer> resultBySql){
+
+        ArrayList arrayList = new ArrayList();
+
+        try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
+                .prepareStatement("select id, key from portion")) {
+            statement.execute();
+
+            ResultSet resultSet = statement.getResultSet();
+            while (resultSet.next()){
+                resultBySql
+
+            }
+
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return arrayList;
+    }
+
     private Portion resultSetForPortion(ResultSet resultSet) throws SQLException, IOException, ClassNotFoundException {
 
         Portion portion= Portion.create(
@@ -46,7 +69,7 @@ public class PortionDaoImpl implements PortionDao {
     }
 
     @Override
-    public Portion createPortion(String key, String value) {
+    public Portion createPortion(Object key, Object value) {
 
         Portion portion = Portion.create(key, value);
 
@@ -64,7 +87,6 @@ public class PortionDaoImpl implements PortionDao {
         } catch (SQLException | IOException throwables) {
             throwables.printStackTrace();
         }
-        System.out.println(portion.getId());
         return portion;
     }
     private void setStatementFromPortion(PreparedStatement statement, Portion portion) throws SQLException, IOException {
