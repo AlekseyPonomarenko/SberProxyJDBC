@@ -9,6 +9,7 @@ public class MyRunnable implements Runnable {
     }
 
     public void run() {
-        System.out.println(Main.getService().doHardWork(t1, t2));
+        Main.getService().doHardWork(t1, t2);
+        //System.out.println(Main.getService().doHardWork(t1, t2));
     }
 }

@@ -25,7 +25,7 @@ public class Main {
 
         //Начальные параметры
 
-        Method method = ServiceImpl.class.getMethod("doHardWork",Object.class, Object.class);
+        Method method = Service.class.getMethod("doHardWork",Object.class, Object.class);
         ParamsForCache paramsForCache = new ParamsForCache(method);
         Cache.СacheType сacheType = paramsForCache.cacheType;
 
