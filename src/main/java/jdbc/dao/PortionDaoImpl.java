@@ -36,25 +36,23 @@ public class PortionDaoImpl implements PortionDao {
         return null;
     }
 
-    public void loadCash(Map <Object, Integer> resultBySql){
-
-        ArrayList arrayList = new ArrayList();
+    @Override
+    public void loadCash(Map <Object, Integer> resultBySql) throws SQLException {
 
         try (PreparedStatement statement=DataSourceHelper.getINSTANCE().getConnection()
                 .prepareStatement("select id, key from portion")) {
+
             statement.execute();
 
-            ResultSet resultSet = statement.getResultSet();
-            while (resultSet.next()){
-                resultBySql
-
+            ResultSet resultSet=statement.getResultSet();
+            while (resultSet.next()) {
+                resultBySql.put(resultSet.getString("key"), resultSet.getInt("id"));
             }
 
-
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            throw throwables;
         }
-        return arrayList;
+
     }
 
     private Portion resultSetForPortion(ResultSet resultSet) throws SQLException, IOException, ClassNotFoundException {

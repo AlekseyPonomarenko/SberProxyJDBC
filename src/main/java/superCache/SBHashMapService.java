@@ -7,6 +7,7 @@ import primaryTasks.ServiceImpl;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +17,7 @@ public class SBHashMapService {
 
     static private Map <Object, Object> resultByArg = new ConcurrentHashMap <>();
     static private Map <Object, Integer> resultBySql = new ConcurrentHashMap <>();
+    static private PortionDao portionDao = new PortionDaoImpl();
 
     static final private String catalog = "D:\\Temp";
     static final private String nameLastversionMap = "lastVersion.sbdat";
@@ -36,7 +38,7 @@ public class SBHashMapService {
 
         if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
 
-            PortionDao portionDao = new PortionDaoImpl();
+
             Portion model = portionDao.createPortion(key, value);
             return resultBySql.put(key, model.getId());
 
@@ -69,7 +71,6 @@ public class SBHashMapService {
         ParamsForCache paramsForCache=new ParamsForCache(invokeMethod);
         if (paramsForCache.cacheType == Cache.СacheType.SQLITE) {
 
-            PortionDao portionDao=new PortionDaoImpl();
             Portion model=portionDao.findById(resultBySql.get(key));
             result = model.getValue();
 
@@ -136,9 +137,9 @@ public class SBHashMapService {
     }
 
 
-    static public void loadCash(Cache.СacheType cacheType) {
-        if (cacheType == Cache.СacheType.SQLITE){
-
+    static public void loadCash(Cache.СacheType cacheType) throws SQLException {
+        if (cacheType == Cache.СacheType.SQLITE) {
+            portionDao.loadCash(resultBySql);
         }
 
         }
